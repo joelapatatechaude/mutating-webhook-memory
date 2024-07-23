@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mutate-memory
+  namespace: admission-webhook
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mutate-memory
+  template:
+    metadata:
+      labels:
+        app: mutate-memory
+    spec:
+      volumes:
+        - name: my-memory-tls
+          secret:
+            secretName: my-memory-tls
+      containers:
+        - name: mutate-memory
+          resources:
+            requests:
+              cpu: 0.001
+          image: quay.io/rh_ee_cschmitz/memory-request-override:blogpost
+          volumeMounts:
+            - mountPath: "/mount"
+              name: my-memory-tls
+              readOnly: true
+          env:
+            - name: TLS_CERT_FILE
+              value: "/mount/tls.crt"
+            - name: TLS_KEY_FILE
+              value: "/mount/tls.key"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
